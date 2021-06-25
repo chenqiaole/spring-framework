@@ -65,14 +65,19 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 		if (!bd.hasMethodOverrides()) {
 			Constructor<?> constructorToUse;
 			synchronized (bd.constructorArgumentLock) {
+				// 获取对象的构造方法对 bean 进行实例化
 				constructorToUse = (Constructor<?>) bd.resolvedConstructorOrFactoryMethod;
+				// 如果前面没有获取到构造方法，则通过反射获取
 				if (constructorToUse == null) {
+					// 使用 JDK 的反射机制，判断要实例化的 bean 是否是接口
 					final Class<?> clazz = bd.getBeanClass();
+					// 如果 clazz 是一个接口，直接抛出异常
 					if (clazz.isInterface()) {
 						throw new BeanInstantiationException(clazz, "Specified class is an interface");
 					}
 					try {
 						if (System.getSecurityManager() != null) {
+							// 这里使用了一个 PrivilegedExceptionAction 的匿名内部类，使用反射机制获取 bean 的构造方法
 							constructorToUse = AccessController.doPrivileged(
 									(PrivilegedExceptionAction<Constructor<?>>) clazz::getDeclaredConstructor);
 						}
@@ -86,7 +91,8 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 					}
 				}
 			}
-			// 利用构造方法进行实例化
+			// 根据传入的 Constructor，在 BeanUtils 中调用该 Constructor 的
+			// newInstance(Object...) 方法，实例化指定对象
 			return BeanUtils.instantiateClass(constructorToUse);
 		}
 		else {
