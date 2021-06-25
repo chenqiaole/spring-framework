@@ -16,26 +16,15 @@
 
 package org.springframework.beans.factory.support;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.springframework.beans.factory.BeanCreationException;
-import org.springframework.beans.factory.BeanCreationNotAllowedException;
-import org.springframework.beans.factory.BeanCurrentlyInCreationException;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.ObjectFactory;
+import org.springframework.beans.factory.*;
 import org.springframework.beans.factory.config.SingletonBeanRegistry;
 import org.springframework.core.SimpleAliasRegistry;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Generic registry for shared bean instances, implementing the
@@ -71,42 +60,56 @@ import org.springframework.util.StringUtils;
 public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements SingletonBeanRegistry {
 
 	/** Cache of singleton objects: bean name --> bean instance */
+	//	用于保存BeanName和创建bean实例之间的关系，即缓存bean。 beanname -> instance 
 	private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
 
 	/** Cache of singleton factories: bean name --> ObjectFactory */
+	// 用于保存BeanName和常见bean的工厂之间的关系。beanname-> ObjectFactory
 	private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
 
 	/** Cache of early singleton objects: bean name --> bean instance */
+	// 也是保存BeanName和创建bean实例之间的关系，与singletonObjects 不同的是，如果一个单例bean被保存在此，
+	// 则当bean还在创建过程中(比如 A类中有B类属性，当创建A类时发现需要先创建B类，
+	// 这时候Spring又跑去创建B类，A类就会添加到该集合中，表示正在创建)，就可以通过getBean方法获取到了，其目的是用来检测循环引用。
 	private final Map<String, Object> earlySingletonObjects = new HashMap<>(16);
 
 	/** Set of registered singletons, containing the bean names in registration order */
+	// 用来保存当前所有已经注册的bean
 	private final Set<String> registeredSingletons = new LinkedHashSet<>(256);
 
 	/** Names of beans that are currently in creation */
+	// 用来保存当前正在创建的Bean。也是为了解决循环依赖的问题
 	private final Set<String> singletonsCurrentlyInCreation =
 			Collections.newSetFromMap(new ConcurrentHashMap<>(16));
 
 	/** Names of beans currently excluded from in creation checks */
+	// 用来保存当前从创建检查中排除的bean名称
 	private final Set<String> inCreationCheckExclusions =
 			Collections.newSetFromMap(new ConcurrentHashMap<>(16));
 
 	/** List of suppressed Exceptions, available for associating related causes */
+	// 初始化过程中的异常列表
 	@Nullable
 	private Set<Exception> suppressedExceptions;
 
 	/** Flag that indicates whether we're currently within destroySingletons */
+	// 标志是否在销毁BeanFactory过程中
 	private boolean singletonsCurrentlyInDestruction = false;
 
 	/** Disposable bean instances: bean name --> disposable instance */
+	// 一次性bean实例：beanName -> 一次性实例。暂未明白
 	private final Map<String, Object> disposableBeans = new LinkedHashMap<>();
 
 	/** Map between containing bean names: bean name --> Set of bean names that the bean contains */
+	// 包含的Bean名称之间的映射：BeanName  -> Bean包含的BeanName集合
 	private final Map<String, Set<String>> containedBeanMap = new ConcurrentHashMap<>(16);
 
 	/** Map between dependent bean names: bean name --> Set of dependent bean names */
+	// bean dependent(依赖的集合) : beanName -> 依赖该beanName 的 bean，即 key代表的bean 被value 所依赖
 	private final Map<String, Set<String>> dependentBeanMap = new ConcurrentHashMap<>(64);
 
 	/** Map between depending bean names: bean name --> Set of bean names for the bean's dependencies */
+	// bean 被哪些bean依赖 ：  beanName -> beanName 所依赖的 bean。即 key 依赖于value这些bean
 	private final Map<String, Set<String>> dependenciesForBeanMap = new ConcurrentHashMap<>(64);
 
 
