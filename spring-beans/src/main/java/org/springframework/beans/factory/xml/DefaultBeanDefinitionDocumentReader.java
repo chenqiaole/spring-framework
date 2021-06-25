@@ -94,6 +94,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 		this.readerContext = readerContext;
 		logger.debug("Loading bean definitions");
 		Element root = doc.getDocumentElement();
+		// 从 xml 根节点开始解析文件
 		doRegisterBeanDefinitions(root);
 	}
 
@@ -149,6 +150,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 		}
 
 		preProcessXml(root); // 钩子
+		// 往下看
 		parseBeanDefinitions(root, this.delegate);
 		postProcessXml(root);// 钩子
 

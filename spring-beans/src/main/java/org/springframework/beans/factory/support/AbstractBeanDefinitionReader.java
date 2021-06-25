@@ -187,6 +187,7 @@ public abstract class AbstractBeanDefinitionReader implements EnvironmentCapable
 			// 继续往下看
 			counter += loadBeanDefinitions(resource);
 		}
+		// 最后返回 counter，表示总共加载了多少的 BeanDefinition
 		return counter;
 	}
 
